@@ -1,0 +1,19 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h1>This is a test</h1>
+    
+    <form action="{% url 'new_listing' %}" method="POST">
+        {% csrf_token %}
+        <div id ="listing-form">
+            {{ form }}
+            <select name="category">
+                {% for category in categories %}
+                    <option value="{{ category }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="owner-id" value={{ user.id }}>
+            <input type="submit">
+        </div>
+    </form>
+{% endblock %}
