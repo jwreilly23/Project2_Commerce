@@ -2,6 +2,9 @@
 
 {% block body %}
     <h1>This is a test</h1>
+    {% if message %}
+        <h3>{{ message }}</h3>
+    {% endif %}
     
     <form action="{% url 'new_listing' %}" method="POST">
         {% csrf_token %}
@@ -9,7 +12,7 @@
             {{ form }}
             <select name="category">
                 {% for category in categories %}
-                    <option value="{{ category }}">{{ category.name }}</option>
+                    <option value="{{ category.id }}">{{ category.name }}</option>
                 {% endfor %}
             </select>
             <input type="hidden" name="owner-id" value={{ user.id }}>

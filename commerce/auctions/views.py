@@ -14,10 +14,10 @@ class ListingForm(forms.Form):
     image = forms.URLField(label="Image (optional)", required=False)
 
     # create tuple for category choices
-    choices = ()
-    for category in Category.objects.all():
-        choices = choices + (category, category.name)
-    category = forms.ChoiceField(choices=choices)
+    # choices = []
+    # for category in Category.objects.all():
+    #     choices = choices + [category.id, category.name]
+    # category = forms.ChoiceField(choices=choices)
 
     
 
@@ -78,7 +78,7 @@ def register(request):
         return render(request, "auctions/register.html")
 
 
-def new_listing(request):    
+def new_listing(request):
     if request.method == "POST":
         # take the posted data and save as form
         form = ListingForm(request.POST)
@@ -95,17 +95,31 @@ def new_listing(request):
             "form": form
         })
 
+        # check valid category
+        category = request.POST["category"]
+        try:
+            test_object = Category.objects.get(id=int(category))
+        except Category.DoesNotExist:
+            return render(request, "auctions/new_listing.html", {
+            "form": ListingForm(),
+            "categories": Category.objects.all(),
+            "message": "Invalid Category"
+        })
+
+
         # log the new listing in Listing model
         # new_listing = Listing(title=title, description=description, image=image, category=category)
         # new_listing.save()
 
 
         # TEMP - RETURN FORM INFO
+        
         return render(request, "auctions/temp.html", {
             "title": title,
             "description": description,
             "image": image,
-            "category": category
+            "category": category,
+            "test_object": test_object
         })
 
     else:
