@@ -5,3 +5,9 @@ body {
 #listing-form {
     color: red;
 }
+
+.listing-title {
+    text-align: left;
+    text-decoration: underline;
+    margin-left: 20px;
+}

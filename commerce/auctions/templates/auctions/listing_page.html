@@ -1,0 +1,16 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <h3>{{ listing.title }}</h3>
+    {% if listing.category %}
+    <div>
+        <span>Category: {{ listing.category }}</span>
+    </div>
+    {% endif %}
+    {% if listing.image %}
+        <img src="{{ listing.image }}" alt="{{ listing.title }}-image" style="width:50%; height:auto">
+    {% endif %}
+    <div>
+        Description: {{listing.description}}
+    </div>
+{% endblock %}
