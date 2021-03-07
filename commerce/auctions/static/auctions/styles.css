@@ -8,7 +8,7 @@ div > a {
 }
 
 .nav-item:hover{
-    font-size: 110%
+    font-size: 110%;
 }
 
 a:hover {
@@ -56,7 +56,7 @@ a:hover {
 
 #comment-section > .comment:nth-child(odd) {    
     background-color: rgb(209, 210, 211);
-    padding: 10px;rgb(175, 204, 218)
+    padding: 10px;
 }
 
 .middle-right-align {

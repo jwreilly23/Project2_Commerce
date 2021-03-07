@@ -11,14 +11,14 @@
             <div class="col" style="text-align:left;">
                 <h2>{{ listing.title }}</h2>
             </div>
-            <div class="col" style="text-align:right;">
+            <div class="col" style="text-align:right; padding: 5px 0px;">
                 {% if user.is_authenticated %}
-                    <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+                    <form action="{% url 'listing_page' listing.title listing.id %}" method="POST">
                         {% csrf_token %}
                         {% if watchlist_check %}
-                            <input type="submit" name="watchlist_action" value="Remove from Watchlist"> 
+                            <input class="btn btn-secondary" type="submit" name="watchlist_action" value="Remove from Watchlist"> 
                         {% else %}
-                            <input type="submit" name="watchlist_action" value="Add to Watchlist">         
+                            <input class="btn btn-warning" type="submit" name="watchlist_action" value="Add to Watchlist">         
                         {% endif %}
                     </form>
                 {% endif %}
@@ -26,19 +26,19 @@
         </div>
     </div>
     {% if listing_owner and listing.open_status %}
-        <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+        <form action="{% url 'listing_page' listing.title listing.id %}" method="POST">
             {% csrf_token %}
-            <input type="submit" name="close_listing" value="Close Listing">
+            <input class="btn btn-danger" type="submit" name="close_listing" value="Close Listing">
         </form>
     {% endif %}
     
     {% if not listing.open_status %}
         <h5><i>- CLOSED -</i></h5>
     {% endif %}
-
+    
     {% if listing.category %}
         <div>
-            Category: <a href="{% url 'category_listing' category_name=listing.category %}">{{ listing.category }}</a>
+            Category: <a href="{% url 'category_listing' listing.category %}">{{ listing.category }}</a>
         </div>
     {% endif %}
 
@@ -47,7 +47,7 @@
     {% endif %}
 
     <div style="font-size: 24px; margin-bottom: 20px;">
-        Description: {{listing.description}}
+        <u>Description:</u> {{listing.description}}
     </div>
     <div class="middle-right-align">
         <h6>Starting bid: ${{ listing.starting_bid|intcomma }}</h6>
@@ -58,11 +58,11 @@
 
     {% if user.is_authenticated and listing.open_status %}
     <div class="middle-right-align">
-            <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+            <form action="{% url 'listing_page' listing.title listing.id %}" method="POST">
                 {% csrf_token %}
-                {% if message %}{{ message }}{% endif %}
+                {% if message %}<span style="color:red;">{{ message }}</span>{% endif %}
                 <input type="number" name="bid_amount" min={{ current_bid }} max=9999.99 step=0.25 placeholder="Enter bid" style="width:150px">
-                <input type="submit" value="Place Bid">
+                <input class="btn btn-primary" type="submit" value="Place Bid">
             </form>
     </div>
     {% endif %}
@@ -88,7 +88,7 @@
         {% endfor %}
 
         {% if user.is_authenticated %}
-            <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST" style="margin-top:10px;">
+            <form action="{% url 'listing_page' listing.title listing.id %}" method="POST" style="margin-top:10px;">
                 {% csrf_token %}
                 <textarea name="new_comment" placeholder="Enter new comment" style="width:100%; height:50px;"></textarea>
                 <div style="text-align:right;">

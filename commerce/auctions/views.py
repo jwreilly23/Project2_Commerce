@@ -14,6 +14,7 @@ class ListingForm(forms.ModelForm):
     class Meta:
         model = Listing
         fields = ("title", "description", "image", "category", "starting_bid")
+        # custom error message for starting bid
         error_messages = {
             'starting_bid': {
                 'max_digits': _("Max starting bid is 999.99")
@@ -28,13 +29,14 @@ def index(request):
     # get bids for active listings
     current_max_bids = []
     for listing in active_listings:
-        # add the maximum or starting bid to the list for each listing
+        # add the maximum bid (or starting bid if no bids yet) to the list for each listing
         try:
-            current_max_bids.append("%.2f" % Bid.objects.filter(listing=listing).latest('amount').amount)
+            current_max_bids.append(Bid.objects.filter(listing=listing).latest('amount').amount)
         except Bid.DoesNotExist:
-            current_max_bids.append("%.2f" % listing.starting_bid)
+            current_max_bids.append(listing.starting_bid)
 
-    # combine lists to iterate concurrently; https://stackoverflow.com/questions/2415865/iterating-through-two-lists-in-django-templates
+    # combine lists to iterate concurrently
+    # https://stackoverflow.com/questions/2415865/iterating-through-two-lists-in-django-templates
     listings_and_bids = zip(active_listings, current_max_bids)
 
     return render(request, "auctions/index.html", {
@@ -106,37 +108,24 @@ def new_listing(request):
             image = listing_form.cleaned_data["image"]
             category = listing_form.cleaned_data["category"]
             starting_bid = listing_form.cleaned_data["starting_bid"]
-        
-        # if form data was not valid, re-render page
+        # if form data was not valid, re-render page noting incorrect inputs
         else:
             return render(request, "auctions/new_listing.html", {
-                "listing_form": listing_form,
-                "message": "Invalid inputs"
+                "listing_form": listing_form
             })
-
-        # check valid category
-        # category = request.POST["category"]
-        # try:
-        #     test_object = Category.objects.get(id=int(category))
-        # except Category.DoesNotExist:
-        #     return render(request, "auctions/new_listing.html", {
-        #     "form": ListingForm(),
-        #     "categories": Category.objects.all(),
-        #     "message": "Invalid Category"
-        # })
 
         # insert new listing data into Listing
         current_user = User.objects.get(id=request.user.id)
-        listing = Listing(title=title, description=description, image=image, category=category, owner=current_user, starting_bid=starting_bid)
+        listing = Listing(title=title, description=description, image=image, category=category,
+                          owner=current_user, starting_bid=starting_bid)
         listing.save()
 
         # redirect to new listing page
         listing_title = listing.title
         listing_id = listing.id
         return HttpResponseRedirect(reverse("listing_page", args=(listing_title, listing_id)))
-        
 
-    else:
+    else:  # not via POST
         return render(request, "auctions/new_listing.html", {
             "listing_form": ListingForm(),
         })
@@ -145,24 +134,23 @@ def new_listing(request):
 def listing_page(request, listing_title, listing_id):
     # user, listing, bid, comments needed regardless of method
     listing = Listing.objects.get(id=listing_id)
+
     # check if signed in
     if request.user.id:
         current_user = User.objects.get(id=request.user.id)
     else:
         current_user = None
-    
+
     # check if current user is listing owner
     if listing.owner == current_user:
         listing_owner = True
     else:
         listing_owner = False
 
-    try: # check if listing has been bid on
+    try:  # check if listing has been bid on
         current_bid = Bid.objects.filter(listing=listing).latest('amount').amount
-    except Bid.DoesNotExist: # listing has not been bid on, set bid to starting bid
+    except Bid.DoesNotExist:  # listing has not been bid on, set bid to starting bid
         current_bid = listing.starting_bid
-
-    
 
     # check if closed and if latest bid by current user
     if (not listing.open_status) and (Bid.objects.filter(listing=listing).latest('amount').bidder == current_user):
@@ -173,9 +161,8 @@ def listing_page(request, listing_title, listing_id):
     # get all comments for listing
     comments = Comment.objects.filter(listing=listing)
 
-
     if request.method == "POST":
-        # if watchlist added
+        # check for watchlist changes
         try:
             watchlist_action = request.POST["watchlist_action"]
             if watchlist_action == "Remove from Watchlist":
@@ -184,17 +171,16 @@ def listing_page(request, listing_title, listing_id):
             elif watchlist_action == "Add to Watchlist":
                 Watchlist(user=current_user, listing=listing).save()
                 watchlist_check = True
-        except KeyError: # watchlist_action not submitted
-            try: # already on watchlist
+        except KeyError:  # watchlist_action not submitted
+            try:  # already on watchlist
                 watchlist_check = Watchlist.objects.get(listing=listing, user=current_user)
-            except Watchlist.DoesNotExist: # not on watchlist
+            except Watchlist.DoesNotExist:  # not on watchlist
                 watchlist_check = False
-            # except UnboundLocalError:
-            #     watchlist_check = None
 
-        # if bid on
+        # check if bid on
         try:
             new_bid = float(request.POST["bid_amount"])
+            # check if new bid is greater than current bid
             if new_bid <= current_bid:
                 return render(request, "auctions/listing_page.html", {
                     "message": "Bid must be greater than current bid",
@@ -207,35 +193,32 @@ def listing_page(request, listing_title, listing_id):
 
             Bid(listing=listing, bidder=current_user, amount=new_bid).save()
             current_bid = Bid.objects.filter(listing=listing).latest('amount').amount
-        except KeyError: # was not bid on
+        except KeyError:  # was not bid on
             pass
 
-        # if closed by owner
+        # check if closed by owner
         try:
             request.POST["close_listing"]
             Listing.objects.filter(id=listing_id).update(open_status=False)
             # reload listing so status correctly shows as closed
             listing = Listing.objects.get(id=listing_id)
-        except KeyError: # was not closed
+        except KeyError:  # was not closed
             pass
 
-        # if comment added
+        # check if comment added
         try:
             new_comment = request.POST["new_comment"]
             Comment(listing=listing, poster=current_user, body=new_comment).save()
-
-        except KeyError: # no new comment
+        except KeyError:  # no new comment
             pass
 
         return HttpResponseRedirect(reverse("listing_page", args=(listing_title, listing_id)))
 
-    else: # not via POST
+    else:  # not via POST
         try:
             watchlist_check = Watchlist.objects.get(listing=listing, user=current_user)
         except Watchlist.DoesNotExist:
             watchlist_check = False
-        except UnboundLocalError: # not logged in
-            watchlist_check = None
 
         return render(request, "auctions/listing_page.html", {
             "listing": listing,
@@ -255,7 +238,8 @@ def watchlist(request, username):
     listings_and_bids = []
     for item in user_watchlist:
         listing = item.listing
-        bid = "%.2f" % Bid.objects.filter(listing=item.listing).latest('amount').amount
+        bid = Bid.objects.filter(listing=item.listing).latest('amount').amount
+        # append (listing, bid) as a tuple to the list so they can be iterated through concurrently
         listings_and_bids.append((listing, bid))
 
     return render(request, "auctions/watchlist.html", {
@@ -266,15 +250,9 @@ def watchlist(request, username):
 def categories(request):
     # get categories list
     categories_list = Category.objects.all()
-    
-    # get listings
-    # listings = []
-    # for category in categories:
-    #     listings.append( Listing.objects.filter(category=category) )
 
     return render(request, "auctions/categories.html", {
         "categories": categories_list,
-        # "listings": listingsS
     })
 
 
@@ -285,9 +263,15 @@ def category_listing(request, category_name):
     listings = Listing.objects.filter(category=category)
     bids = []
     for listing in listings:
-        bids.append("%.2f" % Bid.objects.filter(listing=listing).latest('amount').amount)
+        try:
+            # if listing has been bid on, add latest bid (which will be the largest bid based on the listing_page logic)
+            bids.append(Bid.objects.filter(listing=listing).latest('amount').amount)
+        except Bid.DoesNotExist:
+            # if it has not been bid on, use the starting bid
+            bids.append(listing.starting_bid)
 
-    # combine lists to iterate concurrently; https://stackoverflow.com/questions/2415865/iterating-through-two-lists-in-django-templates
+    # combine lists to iterate concurrently;
+    # https://stackoverflow.com/questions/2415865/iterating-through-two-lists-in-django-templates
     listings_and_bids = zip(listings, bids)
 
     return render(request, "auctions/category_listings.html", {

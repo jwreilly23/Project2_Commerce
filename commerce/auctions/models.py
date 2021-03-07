@@ -5,6 +5,7 @@ from django.db import models
 class User(AbstractUser):
     """Default Django User model"""
 
+
 class Category(models.Model):
     """Category options for listings"""
     name = models.CharField(max_length=15)
@@ -26,8 +27,8 @@ class Listing(models.Model):
     starting_bid = models.DecimalField(max_digits=5, decimal_places=2)
     # optional inputs
     image = models.URLField(null=True, blank=True)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings", null=True, blank=True)    
-    
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="listings", null=True, blank=True)
+
     def __str__(self):
         return f"Title: {self.title}---Owner: {self.owner.username}---Open:{self.open_status}"
 
