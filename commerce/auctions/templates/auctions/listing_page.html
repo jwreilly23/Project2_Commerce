@@ -1,16 +1,102 @@
 {% extends "auctions/layout.html" %}
+{% load humanize %}
 
 {% block body %}
-    <h3>{{ listing.title }}</h3>
-    {% if listing.category %}
+<div id="listing-page">
+    {% if winner %}
+        <h2 style="color:green;">Congratulations, you won!</h2>
+    {% endif %}
     <div>
-        <span>Category: {{ listing.category }}</span>
+        <div class="row">
+            <div class="col" style="text-align:left;">
+                <h2>{{ listing.title }}</h2>
+            </div>
+            <div class="col" style="text-align:right;">
+                {% if user.is_authenticated %}
+                    <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+                        {% csrf_token %}
+                        {% if watchlist_check %}
+                            <input type="submit" name="watchlist_action" value="Remove from Watchlist"> 
+                        {% else %}
+                            <input type="submit" name="watchlist_action" value="Add to Watchlist">         
+                        {% endif %}
+                    </form>
+                {% endif %}
+            </div>
+        </div>
     </div>
+    {% if listing_owner and listing.open_status %}
+        <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+            {% csrf_token %}
+            <input type="submit" name="close_listing" value="Close Listing">
+        </form>
     {% endif %}
+    
+    {% if not listing.open_status %}
+        <h5><i>- CLOSED -</i></h5>
+    {% endif %}
+
+    {% if listing.category %}
+        <div>
+            Category: <a href="{% url 'category_listing' category_name=listing.category %}">{{ listing.category }}</a>
+        </div>
+    {% endif %}
+
     {% if listing.image %}
-        <img src="{{ listing.image }}" alt="{{ listing.title }}-image" style="width:50%; height:auto">
+        <img src="{{ listing.image }}" alt="{{ listing.title }}-image" class="listing-image" style="width:50%;">
     {% endif %}
-    <div>
+
+    <div style="font-size: 24px; margin-bottom: 20px;">
         Description: {{listing.description}}
     </div>
+    <div class="middle-right-align">
+        <h6>Starting bid: ${{ listing.starting_bid|intcomma }}</h6>
+    </div>
+    <div class="middle-right-align">
+        <h6>Current bid: ${{ current_bid|intcomma }}</h6>
+    </div>
+
+    {% if user.is_authenticated and listing.open_status %}
+    <div class="middle-right-align">
+            <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST">
+                {% csrf_token %}
+                {% if message %}{{ message }}{% endif %}
+                <input type="number" name="bid_amount" min={{ current_bid }} max=9999.99 step=0.25 placeholder="Enter bid" style="width:150px">
+                <input type="submit" value="Place Bid">
+            </form>
+    </div>
+    {% endif %}
+
+    <h4 style="margin-top:20px;">Comments</h4>
+    <div id="comment-section">
+        {% for comment in comments %}
+        <div class="comment">
+            <div class="row" style="height:30px; font-weight:bold;">
+                <div class="col">
+                    {{ comment.poster }}
+                </div>
+                <div class="col" style="text-align: right;">
+                    {{ comment.post_date }}
+                </div>
+            </div>
+            <div class="row" style="height:30px; background-color:white; margin:10px;">
+                <div class="col">
+                    <i>{{ comment.body }}</i>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if user.is_authenticated %}
+            <form action="{% url 'listing_page' listing_title=listing.title listing_id=listing.id %}" method="POST" style="margin-top:10px;">
+                {% csrf_token %}
+                <textarea name="new_comment" placeholder="Enter new comment" style="width:100%; height:50px;"></textarea>
+                <div style="text-align:right;">
+                    <input type="submit" value="Add comment">
+                </div>
+            </form>
+        {% endif %}
+    </div>
+    
+</div>
 {% endblock %}

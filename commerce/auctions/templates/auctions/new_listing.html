@@ -1,16 +1,15 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h1>New Listing</h1>
+    <h2><i>New Listing</i></h2>
     {% if message %}
         <h4>{{ message }}</h4>
     {% endif %}
     
-    <form action="{% url 'new_listing' %}" method="POST">
+    <form action="{% url 'new_listing' %}" method="POST" class="new-listing-form">
         {% csrf_token %}
-        <div id ="listing-form">
+        <div>
             {{ listing_form }}
-            {{ bid_form }}
             <input type="hidden" name="owner-id" value={{ user.id }}>
             <input type="submit">
         </div>

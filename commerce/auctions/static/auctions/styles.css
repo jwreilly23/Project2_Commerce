@@ -1,13 +1,70 @@
 body {
     padding: 10px;
+    background-color: rgb(182, 207, 218);
 }
 
-#listing-form {
-    color: red;
+div > a {
+    color: black;
+}
+
+.nav-item:hover{
+    font-size: 110%
+}
+
+a:hover {
+    text-decoration: none;
+    color: rgb(9, 6, 211);
+}
+
+.listing-container {
+    margin: 10px;
+    margin-right: 10%;
+    padding: 10px 20px;
+    background-color:rgb(223, 235, 241);
+    border-radius: 25px;
+    border: 1px solid black;
 }
 
 .listing-title {
-    text-align: left;
     text-decoration: underline;
-    margin-left: 20px;
+}
+
+.listing-image {
+    width: 30%; 
+    height:auto; 
+    margin: 10px 0px; 
+}
+
+#listing-page {
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: rgb(182, 207, 218);
+}
+
+#comment-section {
+    width: 50%;
+    background-color: rgb(223, 235, 241);
+    border-radius: 10px;
+    border: 1px solid black;
+    padding: 10px;
+}
+
+#comment-section > .comment:nth-child(even) {
+    background-color: rgb(154, 175, 185);
+    padding: 10px;
+}
+
+#comment-section > .comment:nth-child(odd) {    
+    background-color: rgb(209, 210, 211);
+    padding: 10px;rgb(175, 204, 218)
+}
+
+.middle-right-align {
+    width: 50%;
+    text-align: right;
+}
+
+#id_title, #id_description, #id_image, #id_category, #id_starting_bid {
+    margin-right: 10px;
+    margin-left: 2px;
 }
